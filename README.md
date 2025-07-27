@@ -1,86 +1,63 @@
-# 🧠 Proposal: Reincarnator  
-**A Modular Swarm Agent for Detecting Smart Contract Reincarnations on Solana**  
-*Built with the Eremos Agent Framework*
+# 🧠 Reincarnator  
+**Detecting Recycled Smart Contracts & Reactivated Wallets on Solana**  
+*A Swarm Agent Proposal for the Eremos Framework*
 
 ---
 
 ## Overview
 
-**Reincarnator** is a behavioral detection agent designed to track **recycled smart contracts**, **reactivated high-risk wallets**, and **coordinated scam relaunches** on the Solana blockchain. 
+**Reincarnator** is a modular swarm agent that detects **recycled malicious contract behavior** on the Solana blockchain. It tracks **contract clones**, **wallet reactivations**, **airdrop funneling**, and **metadata-only redeploys** — all common techniques used in scam iterations and rugpull relaunches.
 
-This agent leverages **compound pattern detection** — combining contract fingerprinting, wallet dormancy analysis, airdrop funneling, and metadata mutation recognition — to surface high-confidence early signals of on-chain threat recurrence.
-
-> 🔍 **Key Idea:** The most dangerous smart contracts aren’t always new — they’re often old code in new wrappers, deployed by wallets that disappeared and reemerged.
+> Solana moves fast. Scammers move faster. Reincarnator spots familiar traps wearing new disguises.
 
 ---
 
 ## Motivation
 
-Solana’s environment makes it uniquely vulnerable to **scam reincarnation**:
+Scams on Solana often follow a cycle:
+- Copy existing malicious contracts (e.g., honeypots, rug factories)
+- Deploy with a fresh name and symbol
+- Use wallets that were dormant or had prior scam involvement
+- Funnel airdrops into one centralized wallet or CEX
 
-- ⚡ **Low deploy cost** enables endless iteration by bad actors
-- 🫥 **Pseudonymous wallets** make historical linking hard
-- 🚀 **Retail FOMO** drives high inflow into unaudited tokens
-- ⏳ **Rugs recycle** — often by dormant wallets or copycat deploys
-
-Yet no public tool today *proactively* detects when previously malicious or dormant actors redeploy slightly modified versions of known scams.
-
-**Reincarnator** fills this gap.
+Most on-chain tools catch symptoms **after the exploit**. Reincarnator is built for **early detection** — based on recurring behavioral patterns, not just static heuristics.
 
 ---
 
-## Objectives
+## Agent Objectives
 
-- ✅ Detect recycled smart contracts with ≥95% similarity to known malicious or suspicious code
-- ✅ Surface deployer wallets that have been dormant for ≥90 days or tied to past scams
-- ✅ Flag airdrop claimers funneling to the same centralized wallet or CEX deposit address
-- ✅ Catch duplicate token deploys that differ only by minor metadata (e.g., symbol, supply)
-- ✅ Emit real-time alerts for dashboards, firewalls, or public transparency feeds
+- ✅ Detect smart contracts ≥95% similar to previously flagged or known malicious contracts
+- ✅ Identify contracts deployed by wallets that have been dormant ≥90 days
+- ✅ Flag wallets tied to previous scams or funded through mixers/CEXs
+- ✅ Catch copy-pasted tokens with only superficial metadata edits
+- ✅ Track airdrop patterns where claimers converge to one wallet or CEX address
+- ✅ Emit actionable, real-time alerts for dashboards and risk engines
 
 ---
 
 ## Detection Architecture
 
-### 🧠 **Behavioral Patterns Tracked**
+### 🧠 Behavioral Patterns Tracked
 
-| Behavior | Description |
-|----------|-------------|
-| Code Cloning | Detect near-duplicate smart contracts using fingerprinting |
-| Wallet Reawakening | Flag re-deployments from long-dormant or risk-associated wallets |
-| Metadata Mutants | Identify redeploys of the same logic with only cosmetic metadata changes |
-| Airdrop Funnels | Monitor mass airdrop claim wallets funneling to a common wallet/CEX |
-| Compound Triggers | Only emit alerts when multiple suspicious traits overlap |
-
----
-
-## Technical Design
-
-### Modular Integration with **Eremos Agent Framework**
-
-| Function | Module |
-|---------|--------|
-| Code Fingerprinting | `CodeSimilarityModule` (AST/Wasm diffing) |
-| Dormant Wallet Profiling | `WalletActivityModule` |
-| Risk Attribution | `WalletProfiler`, `FundingSourceModule` |
-| Airdrop Funnel Tracking | `AirdropFlowAnalyzer` |
-| Metadata Clone Detection | `TokenDeployNormalizer` |
-| Alert Engine | `SwarmAgent` |
-| Output Formatting | `SignalReporter`, `SeverityScorer` |
+| Pattern | Description |
+|--------|-------------|
+| **Code Cloning** | Detects smart contracts with ≥95% bytecode or AST similarity |
+| **Dormant Wallet Deploys** | Deploys from wallets inactive ≥90 days |
+| **Wallet Reincarnation** | Reactivation of wallets previously tied to scams |
+| **Metadata Mutants** | Same contract logic, altered token name/symbol/supply |
+| **Airdrop Funnels** | Claim wallets funneling funds into one destination within a short time frame |
 
 ---
 
-### Sample Alert Output
+## 🔧 Detection Logic (Programmatic Flow)
 
-```json
-{
-  "signal": "reincarnation_detected",
-  "wallet_status": "dormant",
-  "wallet_last_active": "2024-09-02",
-  "code_similarity": 0.972,
-  "metadata_variance": true,
-  "airdrop_funnel_detected": true,
-  "previous_contract": "RugToken v1",
-  "current_contract": "RugToken Reloaded",
-  "severity_score": 9.2,
-  "tags": ["reincarnation", "wallet_reawakening", "metadata_clone"]
+### 1. **Monitor Deployments**
+
+```ts
+onNewDeploy(programAddress: Pubkey) {
+  const bytecode = getProgramBytecode(programAddress);
+  const metadata = parseSPLTokenMetadata(programAddress);
+  ...
 }
+
+
