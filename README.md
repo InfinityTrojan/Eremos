@@ -1,130 +1,82 @@
-# Eremos
+# 🧠 Reincarnator – An Eremos Swarm Agent
 
-Solana moves fast. Too fast.
+**Detecting Recycled Smart Contracts and Reactivated Wallets on Solana**
 
-Scams evolve. Wallets vanish, then return. Contract code gets cloned with slight tweaks. Retail walks into the same trap, again and again.
+Solana moves fast — and so do the scammers. Old smart contracts return in new wrappers. Dormant wallets reawaken to deploy the same grifts. **Reincarnator** is a compound-detection agent built with the Eremos framework to surface these *reincarnations* by linking reused contract logic, reactivated wallets, CEX funneling, and metadata mutations.
 
-“Reincarnator” – Detecting Code Clones by Dormant or Suspicious Wallets on Solana Powered by Eremos Agent Framework
+---
 
-# Core Insight:
-The most dangerous smart contracts on Solana aren’t always new — they’re often old code in new wrappers, deployed by wallets that vanished for months and then suddenly return.
+## 🚨 What It Detects
 
-This swarm agent tracks and records a compound behavior:
-🧬 When near-duplicate contracts are deployed by wallets that have been long dormant or previously tied to high-risk activity.
+| Pattern | Behavior |
+|--------|----------|
+| 🧬 Code Cloning | Smart contracts with near-identical logic to historical ones (≥ 95% similarity) |
+| 💤 Dormant Wallet Deploys | Contracts deployed by wallets inactive for ≥ 90 days |
+| 🧟‍♂️ Wallet Reincarnations | Wallets tied to previous scams now deploying again |
+| 🪄 Metadata Mutations | Token deploys with identical logic but minor tweaks in `name`, `symbol`, or supply |
+| 🏦 Airdrop CEX Funnels | Multiple airdrop recipients funneling to the same CEX address |
 
-#🧠 Agent Name: Reincarnator
+---
 
-#Goal:
-Detect recycled contract logic paired with wallet reactivations, surfacing early warnings for:
+## 🧠 Core Detection Logic
 
-Rugpull relaunches
+1. **Monitor Deployments**
+   - Subscribes to all new program and SPL token deploys
+   - Extracts bytecode or token metadata/state layout
 
-Sybil reactivations
+2. **Fingerprint the Contract**
+   - Normalizes contract constants (e.g., name, fees, supply)
+   - Generates fingerprint (AST hash, Wasm structure, etc.)
+   - Compares against historical fingerprints (≥ 95% match triggers step 3)
 
-High-risk devs returning with "fresh" tokens
+3. **Analyze Wallet Behavior**
+   - Flags wallets inactive ≥ 90 days
+   - Checks prior scam associations and funding sources (CEX, mixers, bridges)
 
-#Detection Logic:
+4. **Track Airdrop Funnels**
+   - Detects airdrop claim wallets funneling to the same destination (CEX or single wallet)
 
-1. Monitor Contract Deployments
-Subscribe to all new program or SPL token deploys
+5. **Check Metadata Mutations**
+   - Flags token deploys with matching logic but altered metadata fields
 
-Extract contract bytecode or state layout
+6. **Emit High-Severity Alert**
+   - Alert is triggered only when multiple suspicious traits overlap
 
-2. Fingerprint the Code
-Normalize constants (token name, supply, fees)
+---
 
-Generate a code fingerprint (hash or AST structure)
+## 🏗 Eremos Integration
 
-Compare against historical contracts
+| Function | Eremos Module |
+|---------|----------------|
+| Code Fingerprinting | `CodeSimilarityModule` (AST/Wasm diff) |
+| Wallet Activity | `WalletActivityModule` |
+| Risk Attribution | `WalletProfiler`, `FundingSourceModule` |
+| Airdrop Funnels | `AirdropFlowAnalyzer` |
+| Metadata Diffing | `TokenDeployNormalizer` |
+| Alert Triggering | `SwarmAgent` core logic |
+| Output & Scoring | `SignalReporter`, `SeverityScorer` |
 
-✅ If similarity > 95% → proceed to wallet analysis
+---
 
-3. Analyze Deployer Wallet
-Pull wallet's historical activity
+## 📦 Output Formats
 
-If wallet has been inactive ≥ 90 days, flag as dormant
+The agent emits alerts in structured JSON format, ready for:
 
-If wallet was involved in prior scams/rugs, increase severity score
+- Analyst dashboards
+- Discord alerting systems
+- Token explorer warning badges
+- API integrations with firewalls and risk engines
 
-Track wallet funding source (e.g., CEX, mixer, bridge)
-
-4. Combine Both Signals
-If a dormant or flagged wallet deploys a clone contract, emit a high-severity alert.
-
-This is a “reincarnation” of a previous on-chain pattern, and a powerful early signal of coordinated or repeat malicious behavior.
-
-# How It Fits in Eremos Architecture:
-
-| Concept                 | Corresponding Eremos Modules                                            |
-| ----------------------- | ----------------------------------------------------------------------- |
-| Code Similarity         | `CodeSimilarityModule` (could leverage decompiler or Wasm diff tooling) |
-| Dormant Wallet Tracking | `WalletActivityModule`                                                  |
-| Wallet Risk Analysis    | `WalletProfiler`, `FundingSourceModule`                                 |
-| Signal Trigger          | `SwarmAgent` logic with compound scoring                                |
-| Output Formatting       | `SignalReporter`, `SeverityScorer`                                      |
-
-#Summary of Concepts Used
-
-| Concept             | Role in Agent                                       |
-| ------------------- | --------------------------------------------------- |
-| Code Fingerprinting | Identifies recycled or malicious logic              |
-| Dormancy Profiling  | Highlights ghost wallets coming back online         |
-| Wallet Risk Scoring | Connects wallets to previous high-risk behavior     |
-| Compound Triggering | Alerts only when multiple suspicious traits overlap |
-
-
-# Summary
-Agent Name: Reincarnator
-Tracks: Contract clones deployed by dormant or suspicious wallets
-Detects: Recycled scams, rugpull relaunches, ghost wallet activity
-Why Solana: Cheap deploy cost + pseudonymity enables pattern abuse
-Built For: Real-time alerts, analyst dashboards, trust signals in token UX
-
-
-
-                   +----------------------+
-                   |  Swarm Agent:        |
-                   |   Reincarnator       |
-                   +----------+-----------+
-                              |
-              +---------------+----------------+
-              |                                |
-+-----------------------------+   +----------------------------+
-| CodeSimilarityModule        |   | WalletActivityModule       |
-|-----------------------------|   |----------------------------|
-| - Extract contract bytecode |   | - Track tx timestamps      |
-| - Normalize constants       |   | - Compute dormancy period  |
-| - Generate code fingerprint |   | - Detect reactivation      |
-| - Check for 95%+ similarity |   +------------+---------------+
-+-----------------------------+                |
-                                               |
-                           +-------------------v--------------------+
-                           | WalletProfiler & RiskScorer Module     |
-                           |----------------------------------------|
-                           | - Check if wallet has prior rug links |
-                           | - Analyze funding patterns (CEX, etc) |
-                           | - Score wallet risk level             |
-                           +-------------------+--------------------+
-                                               |
-                                    +----------v-----------+
-                                    | Swarm Decision Logic |
-                                    |----------------------|
-                                    | If (clone + dormant) |
-                                    | OR (clone + risky)   |
-                                    | => Trigger Alert     |
-                                    +----------+-----------+
-                                               |
-                                    +----------v-----------+
-                                    |  SignalReporter      |
-                                    |----------------------|
-                                    | - Alert type         |
-                                    | - Severity level     |
-                                    | - Contract diff link |
-                                    | - Deployer metadata  |
-                                    +----------------------+
-
-
-
-
-
-        #noobstar
+```json
+{
+  "signal": "reincarnation_detected",
+  "fingerprint_match": 0.97,
+  "wallet_status": "dormant",
+  "wallet_risk_score": 88,
+  "code_hash": "0xabc123...",
+  "original_contract": "TokenXYZ_v1",
+  "current_contract": "TokenXYZ_v2",
+  "metadata_variance": true,
+  "airdrop_funneling": true,
+  "severity": "high"
+}
